@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
-ckpt_path='/home/casanova/scratch/ckpt_seg'
-data_path='/home/casanova/scratch/'
+ckpt_path='/content/paper/output'
+data_path='/content/paper/data'
 
 ## GTA pretraining for Cityscapes
 python train_supervised.py --exp-name 'gta_pretraining_cs' --checkpointer \

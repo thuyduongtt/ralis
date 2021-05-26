@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
-ckpt_path='/home/casanova/scratch/ckpt_seg'
-data_path='/home/casanova/scratch/'
+ckpt_path='/content/paper/output'
+data_path='/content/paper/data'
 
 for budget in 1920 3840 7680 11520 19200 30720
     do

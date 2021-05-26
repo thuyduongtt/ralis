@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
-ckpt_path='/home/casanova/scratch/ckpt_seg'
-data_path='/home/casanova/scratch/'
+ckpt_path='/content/paper/output'
+data_path='/content/paper/'
 
 for al_algorithm in 'random'
     do
