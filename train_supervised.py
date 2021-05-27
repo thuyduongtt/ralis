@@ -63,7 +63,7 @@ def main(args):
     kwargs_data = {"data_path": args.data_path,
                    "tr_bs": args.train_batch_size,
                    "vl_bs": args.val_batch_size,
-                   "n_workers": 4,
+                   "n_workers": 2,
                    "scale_size": args.scale_size,
                    "input_size": args.input_size,
                    "num_each_iter": args.num_each_iter,

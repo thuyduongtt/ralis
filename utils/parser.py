@@ -2,7 +2,7 @@ import argparse
 import os
 
 ckpt_path = '/content/paper/output'
-data_path = '/content/paper/data'
+data_path = '/content/paper/data/'
 
 
 def get_arguments():

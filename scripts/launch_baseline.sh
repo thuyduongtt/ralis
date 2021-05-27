@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 ckpt_path='/content/paper/output'
-data_path='/content/paper/'
+data_path='/content/paper/data/'
 
 for al_algorithm in 'random'
     do

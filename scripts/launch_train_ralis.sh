@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 ckpt_path='/content/paper/output'
-data_path='/content/paper/data'
+data_path='/content/paper/data/'
 
 for seed in 20 50 234 77 12
     do
