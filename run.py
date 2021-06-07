@@ -266,7 +266,7 @@ def main(args):
             del (train_set)
             del (candidate_set)
 
-            print ('Resetting the networks, optimizers and data!')
+            print('Resetting the networks, optimizers and data!')
             # Create the networks from scratch, except the policy and target networks.
             ####------ Create segmentation, query and target network ------####
             kwargs_models = {"dataset": args.dataset,
