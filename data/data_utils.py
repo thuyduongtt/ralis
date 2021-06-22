@@ -17,7 +17,18 @@ def get_data(data_path, tr_bs, vl_bs, n_workers=0, scale_size=0, input_size=(256
 
     # To train pre-trained segmentation network and upper bounds.
     if supervised:
-        if 'gta' in dataset:
+        if dataset == 'QB':
+            train_set = camvid.Camvid('fine', 'train',
+                                      data_path=data_path,
+                                      joint_transform=train_joint_transform,
+                                      transform=input_transform,
+                                      target_transform=target_transform)
+            val_set = camvid.Camvid('fine', 'val',
+                                    data_path=data_path,
+                                    joint_transform=val_joint_transform,
+                                    transform=input_transform,
+                                    target_transform=target_transform)
+        elif 'gta' in dataset:
             train_set = gtav.GTAV('fine', 'train',
                                   data_path=data_path,
                                   joint_transform=train_joint_transform,
