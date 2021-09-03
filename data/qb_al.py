@@ -59,7 +59,7 @@ def append_patch_region(patch_name, region_name):
 class QB_al(data.Dataset):
     def __init__(self, quality, mode, data_path='', joint_transform=None, joint_transform_al=None,
                  sliding_crop=None, transform=None, target_transform=None, candidates_option=False,
-                 region_size=(80, 90),
+                 region_size=(64, 64),
                  num_each_iter=1, only_last_labeled=True, split='train'):
         self.num_each_iter = num_each_iter
         self.num_classes = num_classes
@@ -80,8 +80,8 @@ class QB_al(data.Dataset):
         self.state_subset = [img for i, img in enumerate(self.imgs) if (img[-1] in splits['d_s'])]
         self.state_subset_regions = {}
         for i in range(len(splits['d_s'])):
-            x_r1 = np.arange(0, 480 - region_size[0] + 1, region_size[0])
-            y_r1 = np.arange(0, 360 - region_size[1] + 1, region_size[1])
+            x_r1 = np.arange(0, 256 - region_size[0] + 1, region_size[0])
+            y_r1 = np.arange(0, 256 - region_size[1] + 1, region_size[1])
             self.state_subset_regions.update({i: np.array(np.meshgrid(x_r1, y_r1)).T.reshape(-1, 2)})
 
         if split == 'train':
@@ -99,15 +99,15 @@ class QB_al(data.Dataset):
         self.selected_regions = dict()
         self.list_regions = []
         self.num_imgs = len(self.imgs)
-        splitters_x = np.arange(0, 480 - region_size[0] + 1, region_size[0])
-        splitters_y = np.arange(0, 360 - region_size[1] + 1, region_size[1])
+        splitters_x = np.arange(0, 256 - region_size[0] + 1, region_size[0])
+        splitters_y = np.arange(0, 256 - region_size[1] + 1, region_size[1])
         splitters_mesh = np.array(np.meshgrid(splitters_y, splitters_x)).T.reshape(-1, 2)
         prov_splitters = splitters_mesh.copy()
         prov_splitters_x = list(prov_splitters[:, 1])
         prov_splitters_y = list(prov_splitters[:, 0])
         self.unlabeled_regions_x = [deepcopy(prov_splitters_x) for _ in range(self.num_imgs)]
         self.unlabeled_regions_y = [deepcopy(prov_splitters_y) for _ in range(self.num_imgs)]
-        self.num_unlabeled_regions_total = (360 * 480) // (
+        self.num_unlabeled_regions_total = (256 * 256) // (
                 region_size[0] * region_size[1]) * self.num_imgs
         self.region_size = region_size
 
@@ -225,6 +225,7 @@ class QB_al(data.Dataset):
         labeled_regions = 0
         for key, value in self.selected_regions.items():
             labeled_regions += len(value)
+        print(f'get_num_labeled_regions: {labeled_regions}')
         return labeled_regions
 
     def get_candidates(self, num_regions_unlab=1000):
