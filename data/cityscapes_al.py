@@ -192,7 +192,7 @@ class CityScapes_al(data.Dataset):
             if self.target_transform is not None:
                 mask = self.target_transform(mask)
             return img, mask, (img_path, mask_path, im_name), selected_region[0] if not self.candidates else \
-            self.selected_images[index], 0
+                self.selected_images[index], 0
 
     def maskout_unselected_regions(self, mask, image, region_size=(128, 128)):
         masked = np.full(mask.shape, ignore_label)

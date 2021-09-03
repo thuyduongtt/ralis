@@ -36,22 +36,28 @@ def make_dataset(mode, root):
                     patch,
                     Path(rootAndMode, input_dir_2, regionOrPatch.stem, patch.name),
                     Path(rootAndMode, label_dir, regionOrPatch.stem, patch.name),
-                    patch.name
+                    append_patch_region(patch.name, regionOrPatch.stem)
                 ))
         else:
             items.append((
                 regionOrPatch,
-                Path(rootAndMode, input_dir_2, regionOrPatch.stem),
-                Path(rootAndMode, label_dir, regionOrPatch.stem),
-                regionOrPatch.stem
+                Path(rootAndMode, input_dir_2, regionOrPatch.name),
+                Path(rootAndMode, label_dir, regionOrPatch.name),
+                regionOrPatch.name
             ))
 
-    print(items[0])
     return items
 
 
+# append patch region to distinguish patches like "center.bmp", 'bottom_right.bmp"
+def append_patch_region(patch_name, region_name):
+    if region_name in patch_name:
+        return patch_name
+    return region_name + '_' + patch_name
+
+
 class QB_al(data.Dataset):
-    def __init__(self, quality, mode, data_path='', joint_transform=None,
+    def __init__(self, quality, mode, data_path='', joint_transform=None, joint_transform_al=None,
                  sliding_crop=None, transform=None, target_transform=None, candidates_option=False,
                  region_size=(80, 90),
                  num_each_iter=1, only_last_labeled=True, split='train'):
@@ -65,11 +71,12 @@ class QB_al(data.Dataset):
         self.quality = quality
         self.mode = mode
         self.joint_transform = joint_transform
+        self.joint_transform_al = joint_transform_al
         self.sliding_crop = sliding_crop
         self.transform = transform
         self.target_transform = target_transform
 
-        splits = np.load('data/camvid_al_splits.npy', allow_pickle=True).item()
+        splits = np.load('data/qb_al_splits.npy', allow_pickle=True).item()
         self.state_subset = [img for i, img in enumerate(self.imgs) if (img[-1] in splits['d_s'])]
         self.state_subset_regions = {}
         for i in range(len(splits['d_s'])):

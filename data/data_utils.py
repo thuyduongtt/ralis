@@ -3,7 +3,7 @@ from torch.utils.data import DataLoader
 
 import utils.joint_transforms as joint_transforms
 import utils.transforms as extended_transforms
-from data import cityscapes, gtav, cityscapes_al, cityscapes_al_splits, camvid, camvid_al
+from data import cityscapes, gtav, cityscapes_al, cityscapes_al_splits, camvid, camvid_al, qb, qb_al
 
 
 def get_data(data_path, tr_bs, vl_bs, n_workers=0, scale_size=0, input_size=(256, 512),
@@ -18,16 +18,16 @@ def get_data(data_path, tr_bs, vl_bs, n_workers=0, scale_size=0, input_size=(256
     # To train pre-trained segmentation network and upper bounds.
     if supervised:
         if dataset == 'QB':
-            train_set = camvid.Camvid('fine', 'train',
-                                      data_path=data_path,
-                                      joint_transform=train_joint_transform,
-                                      transform=input_transform,
-                                      target_transform=target_transform)
-            val_set = camvid.Camvid('fine', 'val',
-                                    data_path=data_path,
-                                    joint_transform=val_joint_transform,
-                                    transform=input_transform,
-                                    target_transform=target_transform)
+            train_set = qb.QB('fine', 'train',
+                              data_path=data_path,
+                              joint_transform=train_joint_transform,
+                              transform=input_transform,
+                              target_transform=target_transform)
+            val_set = qb.QB('fine', 'val',
+                            data_path=data_path,
+                            joint_transform=val_joint_transform,
+                            transform=input_transform,
+                            target_transform=target_transform)
         elif 'gta' in dataset:
             train_set = gtav.GTAV('fine', 'train',
                                   data_path=data_path,
@@ -100,6 +100,33 @@ def get_data(data_path, tr_bs, vl_bs, n_workers=0, scale_size=0, input_size=(256
                                             target_transform=target_transform)
     # To train AL methods
     else:
+        if dataset == 'QB':
+            if al_algorithm == 'ralis' and not test:
+                split = 'train'
+            else:
+                split = 'test'
+            train_set = qb_al.QB_al('fine', 'train',
+                                    data_path=data_path,
+                                    joint_transform=train_joint_transform,
+                                    joint_transform_al=al_train_joint_transform,
+                                    transform=input_transform,
+                                    target_transform=target_transform, num_each_iter=num_each_iter,
+                                    only_last_labeled=only_last_labeled,
+                                    split=split, region_size=region_size)
+            candidate_set = qb_al.QB_al('fine', 'train',
+                                        data_path=data_path,
+                                        joint_transform=None,
+                                        candidates_option=True,
+                                        transform=input_transform,
+                                        target_transform=target_transform, split=split,
+                                        region_size=region_size)
+
+            val_set = qb.QB('fine', 'val',
+                            data_path=data_path,
+                            joint_transform=val_joint_transform,
+                            transform=input_transform,
+                            target_transform=target_transform)
+
         if dataset == 'cityscapes':
             if al_algorithm == 'ralis' and not test:
                 split = 'train'

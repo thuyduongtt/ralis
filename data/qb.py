@@ -35,18 +35,24 @@ def make_dataset(mode, root):
                     patch,
                     Path(rootAndMode, input_dir_2, regionOrPatch.stem, patch.name),
                     Path(rootAndMode, label_dir, regionOrPatch.stem, patch.name),
-                    patch.name
+                    append_patch_region(patch.name, regionOrPatch.stem)
                 ))
         else:
             items.append((
                 regionOrPatch,
-                Path(rootAndMode, input_dir_2, regionOrPatch.stem),
-                Path(rootAndMode, label_dir, regionOrPatch.stem),
-                regionOrPatch.stem
+                Path(rootAndMode, input_dir_2, regionOrPatch.name),
+                Path(rootAndMode, label_dir, regionOrPatch.name),
+                regionOrPatch.name
             ))
 
-    print(items[0])
     return items
+
+
+# append patch region to distinguish patches like "center.bmp", 'bottom_right.bmp"
+def append_patch_region(patch_name, region_name):
+    if region_name in patch_name:
+        return patch_name
+    return region_name + '_' + patch_name
 
 
 class QB(data.Dataset):
@@ -65,10 +71,10 @@ class QB(data.Dataset):
         self.transform = transform
         self.target_transform = target_transform
 
-        # d_t = np.load('data/camvid_al_splits.npy', allow_pickle=True).item()['d_t']
-        #
-        # if subset:
-        #     self.imgs = [img for i, img in enumerate(self.imgs) if (img[-1] in d_t)]
+        d_t = np.load('data/qb_al_splits.npy', allow_pickle=True).item()['d_t']
+
+        if subset:
+            self.imgs = [img for _, img in enumerate(self.imgs) if (img[-1] in d_t)]
 
         print('Using ' + str(len(self.imgs)) + ' images.')
 
