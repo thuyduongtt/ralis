@@ -191,7 +191,8 @@ def get_data(data_path, tr_bs, vl_bs, n_workers=0, scale_size=0, input_size=(256
 
 
 def get_transforms(scale_size, input_size, region_size, supervised, test, al_algorithm, full_res, dataset):
-    mean_std = ([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+    # mean_std = ([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+    mean_std = ([0.485, 0.456, 0.406, 0.485, 0.456, 0.406], [0.229, 0.224, 0.225, 0.229, 0.224, 0.225])
     if scale_size == 0:
         print('(Data loading) Not scaling the data')
         print('(Data loading) Random crops of ' + str(input_size) + ' in training')

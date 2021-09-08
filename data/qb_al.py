@@ -13,6 +13,8 @@ zero_pad = 256 * 3 - len(palette)
 for i in range(zero_pad):
     palette.append(0)
 
+TRANSFORM = True
+
 
 def colorize_mask(mask):
     # mask: numpy array of the mask
@@ -115,12 +117,14 @@ class QB_al(data.Dataset):
         img_path, mask_path, im_name = self.state_subset[index]
         img, mask = Image.open(img_path).convert('RGB'), Image.open(mask_path)
 
-        if self.joint_transform is not None:
-            img, mask = self.joint_transform(img, mask)
-        if self.transform is not None:
-            img = self.transform(img)
-        if self.target_transform is not None:
-            mask = self.target_transform(mask)
+        if TRANSFORM:
+            if self.joint_transform is not None:
+                img, mask = self.joint_transform(img, mask)
+            if self.transform is not None:
+                img = self.transform(img)
+            if self.target_transform is not None:
+                mask = self.target_transform(mask)
+
         return img, mask, None, (img_path, mask_path, im_name), self.state_subset_regions[index]
 
     def __getitem__(self, index):
@@ -157,10 +161,12 @@ class QB_al(data.Dataset):
             else:
                 img, mask = self.joint_transform(img, mask)
 
-        if self.transform is not None:
-            img = self.transform(img)
-        if self.target_transform is not None:
-            mask = self.target_transform(mask)
+        if TRANSFORM:
+            if self.transform is not None:
+                img = self.transform(img)
+            if self.target_transform is not None:
+                mask = self.target_transform(mask)
+
         return img, mask, (img_path1, img_path2, mask_path, im_name), selected_region[0] if not self.candidates else \
             self.selected_images[index], 0
 
@@ -181,17 +187,17 @@ class QB_al(data.Dataset):
         img2 = Image.open(img_path2).convert('RGB')
         img = np.concatenate((img1, img2), axis=-1)
         print('=====')
-        print(img1.shape)
+        print(img1.size)
         print(img.shape)
         mask = Image.open(mask_path)
 
-        if self.joint_transform is not None:
-            img, mask = self.joint_transform(img, mask)
-
-        if self.transform is not None:
-            img = self.transform(img)
-        if self.target_transform is not None:
-            mask = self.target_transform(mask)
+        if TRANSFORM:
+            if self.joint_transform is not None:
+                img, mask = self.joint_transform(img, mask)
+            if self.transform is not None:
+                img = self.transform(img)
+            if self.target_transform is not None:
+                mask = self.target_transform(mask)
         return img, mask, cost_img, (img_path1, img_path2, mask_path, im_name)
 
     def __len__(self):
