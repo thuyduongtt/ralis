@@ -30,13 +30,22 @@ def create_models(dataset, al_algorithm, region_size):
     """
 
     # Segmentation network
-    n_cl = 11 if 'camvid' in dataset else 19
+    n_cl = 19
+    if 'camvid' in dataset:
+        n_cl = 11
+    elif 'QB' in dataset:
+        n_cl = 2
+
+    n_channel = 3
+    if 'QB' in dataset:
+        n_channel = 6
+
     net_type = FPN50_bayesian if al_algorithm == 'bald' else FPN50
     net = net_type(num_classes=n_cl).cuda()
     print('Model has ' + str(count_parameters(net)))
 
     # Query network (and target network for DQN)
-    input_size = [(n_cl + 1) + 3 * 64, (n_cl + 1) + 3 * 64]
+    input_size = [(n_cl + 1) + n_channel * 64, (n_cl + 1) + n_channel * 64]
     if al_algorithm == 'ralis':
         image_size = [480, 360] if 'camvid' in dataset else [2048, 1024]
         indexes_full_state = 10 * (image_size[0] // region_size[0]) * (image_size[1] // region_size[1])
