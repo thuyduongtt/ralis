@@ -87,10 +87,10 @@ def get_arguments():
 
     parser.add_argument("--dataset", type=str, default='cityscapes',
                         choices=['camvid', 'camvid_subset', 'cityscapes', 'cityscapes_subset',
-                                 'cs_upper_bound', 'gta', 'gta_for_camvid'])
+                                 'cs_upper_bound', 'gta', 'gta_for_camvid', 'QB'])
 
     parser.add_argument("--budget-labels", type=int, default=100)
-    parser.add_argument("--num-each-iter", type=int, default=1)  ## Number of regions to label every AL epoch
+    parser.add_argument("--num-each-iter", type=int, default=1)  # Number of regions to label every AL epoch
 
     parser.add_argument("--region-size", nargs='+', type=int, default=(128, 128))
 

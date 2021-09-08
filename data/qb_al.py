@@ -126,7 +126,7 @@ class QB_al(data.Dataset):
     def __getitem__(self, index):
         # Train with all labeled images, selecting a random region per image, and doing the random crop around it
         if self.candidates or self.end_al:
-            img_path, mask_path, im_name = self.imgs[self.selected_images[index]]
+            img_path1, img_path2, mask_path, im_name = self.imgs[self.selected_images[index]]
             # Select random region in the image to make sure there is a region in the crop
             selected_region_ind = np.random.choice(len(self.selected_regions[self.selected_images[index]]))
             selected_region = self.selected_regions[self.selected_images[index]][selected_region_ind]
@@ -138,10 +138,13 @@ class QB_al(data.Dataset):
             # Train with all labeled regions so far, random crop around the selected region
             else:
                 selected = self.list_regions[index]
-            img_path, mask_path, im_name = self.imgs[selected[0]]
+            img_path1, img_path2, mask_path, im_name = self.imgs[selected[0]]
             selected_region = selected[1]
 
-        img, mask = Image.open(img_path).convert('RGB'), Image.open(mask_path)
+        img1 = Image.open(img_path1).convert('RGB')
+        img2 = Image.open(img_path2).convert('RGB')
+        img = np.concatenate((img1, img2), axis=-1)
+        mask = Image.open(mask_path)
         mask = np.array(mask)
 
         if not self.candidates:
@@ -158,7 +161,7 @@ class QB_al(data.Dataset):
             img = self.transform(img)
         if self.target_transform is not None:
             mask = self.target_transform(mask)
-        return img, mask, (img_path, mask_path, im_name), selected_region[0] if not self.candidates else \
+        return img, mask, (img_path1, img_path2, mask_path, im_name), selected_region[0] if not self.candidates else \
             self.selected_images[index], 0
 
     def maskout_unselected_regions(self, mask, image, region_size=(128, 120)):
@@ -172,9 +175,15 @@ class QB_al(data.Dataset):
         return masked
 
     def get_specific_item(self, path):
-        img_path, mask_path, im_name = self.imgs[path]
+        img_path1, img_path2, mask_path, im_name = self.imgs[path]
         cost_img = None
-        img, mask = Image.open(img_path).convert('RGB'), Image.open(mask_path)
+        img1 = Image.open(img_path1).convert('RGB')
+        img2 = Image.open(img_path2).convert('RGB')
+        img = np.concatenate((img1, img2), axis=-1)
+        print('=====')
+        print(img1.shape)
+        print(img.shape)
+        mask = Image.open(mask_path)
 
         if self.joint_transform is not None:
             img, mask = self.joint_transform(img, mask)
@@ -183,7 +192,7 @@ class QB_al(data.Dataset):
             img = self.transform(img)
         if self.target_transform is not None:
             mask = self.target_transform(mask)
-        return img, mask, cost_img, (img_path, mask_path, im_name)
+        return img, mask, cost_img, (img_path1, img_path2, mask_path, im_name)
 
     def __len__(self):
         if self.candidates and self.supervised:
@@ -249,7 +258,7 @@ class QB_al(data.Dataset):
         return candidates
 
     def check_class_region(self, img, region, region_size=(128, 120), eps=1E-7):
-        img_path, mask_path, im_name = self.imgs[img]
+        _, _, mask_path, im_name = self.imgs[img]
         mask = Image.open(mask_path)
         mask = np.array(mask)
         r_x = int(region[1])
