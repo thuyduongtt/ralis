@@ -114,8 +114,11 @@ class QB_al(data.Dataset):
         self.region_size = region_size
 
     def get_subset_state(self, index):
-        img_path, mask_path, im_name = self.state_subset[index]
-        img, mask = Image.open(img_path).convert('RGB'), Image.open(mask_path)
+        img_path1, img_path2, mask_path, im_name = self.state_subset[index]
+        img1 = Image.open(img_path1).convert('RGB')
+        img2 = Image.open(img_path2).convert('RGB')
+        img = np.concatenate((img1, img2), axis=-1)
+        mask = Image.open(mask_path)
 
         if TRANSFORM:
             if self.joint_transform is not None:
@@ -125,7 +128,7 @@ class QB_al(data.Dataset):
             if self.target_transform is not None:
                 mask = self.target_transform(mask)
 
-        return img, mask, None, (img_path, mask_path, im_name), self.state_subset_regions[index]
+        return img, mask, None, (img_path1, img_path2, mask_path, im_name), self.state_subset_regions[index]
 
     def __getitem__(self, index):
         # Train with all labeled images, selecting a random region per image, and doing the random crop around it
@@ -186,9 +189,9 @@ class QB_al(data.Dataset):
         img1 = Image.open(img_path1).convert('RGB')
         img2 = Image.open(img_path2).convert('RGB')
         img = np.concatenate((img1, img2), axis=-1)
-        print('=====')
-        print(img1.size)
-        print(img.shape)
+        # print('=====')
+        # print(img1.size)  # (256, 256)
+        # print(img.shape)  # (256, 256, 6)
         mask = Image.open(mask_path)
 
         if TRANSFORM:

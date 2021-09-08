@@ -41,6 +41,8 @@ def create_models(dataset, al_algorithm, region_size):
         n_channel = 6
 
     net_type = FPN50_bayesian if al_algorithm == 'bald' else FPN50
+    print(f'net_type: {net_type}')
+
     net = net_type(num_classes=n_cl).cuda()
     print('Model has ' + str(count_parameters(net)))
 
