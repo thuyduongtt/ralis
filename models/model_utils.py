@@ -30,11 +30,13 @@ def create_models(dataset, al_algorithm, region_size):
     """
 
     # Segmentation network
-    n_cl = 19
+
     if 'camvid' in dataset:
         n_cl = 11
     elif 'QB' in dataset:
         n_cl = 2
+    else:
+        n_cl = 19
 
     n_channel = 3
     if 'QB' in dataset:
@@ -48,8 +50,15 @@ def create_models(dataset, al_algorithm, region_size):
 
     # Query network (and target network for DQN)
     input_size = [(n_cl + 1) + n_channel * 64, (n_cl + 1) + n_channel * 64]
+    print(f'input_size: {input_size}')  # [387, 387]
     if al_algorithm == 'ralis':
-        image_size = [480, 360] if 'camvid' in dataset else [2048, 1024]
+        if 'camvid' in dataset:
+            image_size = [480, 360]
+        elif 'QB' in dataset:
+            image_size = [256, 256]
+        else:
+            image_size = [2048, 1024]
+
         indexes_full_state = 10 * (image_size[0] // region_size[0]) * (image_size[1] // region_size[1])
 
         policy_net = QueryNetworkDQN(input_size=input_size[0], input_size_subset=input_size[1],
@@ -100,7 +109,7 @@ def load_models(net, load_weights, exp_name_toload, snapshot,
 
     ####------ Load policy (RL) from one folder and network from another folder ------####
     if al_algorithm == 'ralis' and test and os.path.isfile(policy_path):
-        print ('(RL and TEST) Testing policy from another experiment folder!')
+        print('(RL and TEST) Testing policy from another experiment folder!')
         policy_net.load_state_dict(torch.load(policy_path))
         # Load pre-trained segmentation network from another folder (best checkpoint)
         if load_weights and len(exp_name_toload) > 0:
@@ -207,11 +216,11 @@ def get_region_candidates(candidates, train_set, num_regions=2):
             if num_regions_left == 1:
                 candidates.pop(int(index_))
         else:
-            print ('This image has no more unlabeled regions!')
+            print('This image has no more unlabeled regions!')
 
     train_set.set_unlabeled_regions(rx, ry)
-    print ('Regions candidates indexed! Time elapsed: ' + str(time.time() - s))
-    print ('Candidate regions are ' + str(counter_regions))
+    print('Regions candidates indexed! Time elapsed: ' + str(time.time() - s))
+    print('Candidate regions are ' + str(counter_regions))
     return candidate_regions
 
 
@@ -228,7 +237,7 @@ def compute_state(args, net, region_candidates, candidate_set, train_set, num_gr
     the order in state-action representation
     """
     s = time.time()
-    print ('Computing state...')
+    print('Computing state...')
     net.eval()
     state = []
     old_candidate = None
@@ -354,7 +363,10 @@ def compute_state(args, net, region_candidates, candidate_set, train_set, num_gr
                 sample_stats = create_feature_vector_3H_region_kl(pred_region, ent_region,
                                                                   num_classes=train_set.num_classes,
                                                                   reg_sz=reg_sz)
-                state_subset.append(torch.Tensor(sample_stats).unsqueeze(0).detach())
+                ss = torch.Tensor(sample_stats).unsqueeze(0).detach()
+                print('ss')
+                print(ss.shape)  # torch.Size([1, 195])
+                state_subset.append(ss)
                 del (pred_region)
                 del (pred_region_prob)
                 del (ent_region)
@@ -364,12 +376,16 @@ def compute_state(args, net, region_candidates, candidate_set, train_set, num_gr
             del (predictions_py)
             del (predictions_py_prob)
         state_subset = torch.cat(state_subset, dim=0)
+        print('state_subset')
+        print(state_subset.shape)  # torch.Size([160, 195])
+
     else:
         state_subset = None
+
     all_state = {'subset': state_subset, 'pool': state}
     if args.al_algorithm == 'bald':
         net.eval()
-    print ('State computed! Time elapsed: ' + str(time.time() - s))
+    print('State computed! Time elapsed: ' + str(time.time() - s))
     return all_state, region_candidates
 
 
@@ -394,18 +410,21 @@ def select_action(args, policy_net, all_state, steps_done, test=False):
         steps_done += 1
         q_val_ = []
         if sample > eps_threshold or test:
-            print ('Action selected with DQN!')
+            print('Action selected with DQN!')
             with torch.no_grad():
                 # Splitting state to fit it in GPU memory
                 for i in range(0, state.size()[0], 16):
                     if len(state_subset.shape) == 2:
-                        q_val_.append(policy_net(state[i:i + 16].cuda(),
-                                                 state_subset.unsqueeze(0).repeat(state[i:i + 16].size()[0], 1,
-                                                                                  1).cuda()).cpu())
+                        print(state_subset.shape)  # torch.Size([160, 195])
+                        subset = state_subset.unsqueeze(0).repeat(state[i:i + 16].size()[0], 1, 1).cuda()
+                        # print(subset.shape)  # torch.Size([16, 160, 195])
+
+                        p = policy_net(state[i:i + 16].cuda(), subset)
+                        q_val_.append(p.cpu())
                     else:
-                        q_val_.append(policy_net(state[i:i + 16].cuda(),
-                                                 state_subset.unsqueeze(0).repeat(state[i:i + 16].size()[0], 1, 1,
-                                                                                  1).cuda()).cpu())
+                        subset = state_subset.unsqueeze(0).repeat(state[i:i + 16].size()[0], 1, 1, 1).cuda()
+                        p = policy_net(state[i:i + 16].cuda(), subset)
+                        q_val_.append(p.cpu())
 
                     state[i:i + 16].cpu()
                 q_val_ = torch.cat(q_val_)
@@ -452,7 +471,7 @@ def add_labeled_images(args, list_existing_images, region_candidates, train_set,
     lab_set = open(os.path.join(args.ckpt_path, args.exp_name, 'labeled_set_' + str(n_ep) + '.txt'), 'a')
     for i, action in enumerate(action_list):
         if train_set.get_num_labeled_regions() >= budget:
-            print ('Budget reached with ' + str(train_set.get_num_labeled_regions()) + ' regions!')
+            print('Budget reached with ' + str(train_set.get_num_labeled_regions()) + ' regions!')
             break
         im_toadd = region_candidates[i, action, 0]
         train_set.add_index(im_toadd, (region_candidates[i, action, 1], region_candidates[i, action, 2]))
@@ -579,7 +598,7 @@ def optimize_model_conv(args, memory, Transition, policy_net, target_net, optimi
     if len(memory) < BATCH_SIZE:
         return
     print('Optimize model...')
-    print (len(memory))
+    print(len(memory))
     policy_net.train()
     loss_item = 0
     for ep in range(dqn_epochs):

@@ -36,7 +36,8 @@ class QueryNetworkDQN(nn.Module):
     def forward(self, x, subset):
         # Compute state representation
         sub = subset.transpose(2, 1).contiguous()
-        sub = self.conv1_s(F.relu(self.bn1_s(sub)))
+        # print(sub.shape)  # torch.Size([16, 195, 160])
+        sub = self.conv1_s(F.relu(self.bn1_s(sub)))  # RuntimeError: running_mean should contain 195 elements not 387
         sub = self.conv2_s(F.relu(self.bn2_s(sub)))
         sub = self.conv3_s(F.relu(self.bn3_s(sub)))
         sub = self.linear_s(F.relu(self.bn_last_s(sub.view(sub.size()[0], -1))))

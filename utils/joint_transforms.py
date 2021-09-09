@@ -23,6 +23,9 @@ class ComposeRegion(object):
         self.transforms = transforms
 
     def __call__(self, img, mask, region=None):
+        print(f'img.size: {img.size}')  # img.size: 393216
+        print(f'mask.size: {mask.size}')  # mask.size: (256, 256)
+
         assert img.size == mask.size
         for t in self.transforms:
             img, mask = t(img, mask, region=region)
